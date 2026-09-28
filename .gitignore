@@ -1,0 +1,19 @@
+# Built binaries
+bin/
+*.exe
+*.test
+*.out
+
+# Go workspace / coverage
+coverage.out
+coverage.html
+
+# Local env (secrets, machine-specific config)
+.env
+.env.*
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
