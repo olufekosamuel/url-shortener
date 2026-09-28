@@ -1,6 +1,6 @@
 # url-shortener
 
-A small URL shortener in Go, built in layers so the design is interview-explainable.
+A small URL shortener in Go, built in layers
 
 This repo currently has **structure only**: packages compile, nothing shortens a URL yet.
 
