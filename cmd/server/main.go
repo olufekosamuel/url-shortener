@@ -8,12 +8,14 @@ package main
 import (
 	"log"
 
-	"github.com/samuelolufeko/url-shortener/internal/config"
+	"github.com/olufekosamuel/url-shortener/internal/config"
+	"github.com/olufekosamuel/url-shortener/internal/store"
 )
 
 func main() {
 	cfg := config.Load()
+	_ = store.NewMemoryStore()
 
-	log.Printf("url-shortener skeleton listening config: addr=%s baseURL=%s", cfg.Addr, cfg.BaseURL)
-	log.Printf("next: implement store, then shortener service, then HTTP handlers")
+	log.Printf("url-shortener skeleton: addr=%s baseURL=%s", cfg.Addr, cfg.BaseURL)
+	log.Printf("store: in-memory (lost on restart). next: shortener service, then HTTP")
 }

@@ -1,8 +1,8 @@
 # url-shortener
 
-A small URL shortener in Go, built in layers
+A URL shortener in Go, built in layers
 
-This repo currently has **structure only**: packages compile, nothing shortens a URL yet.
+Structure plus an in-memory `Store`. Packages compile; nothing shortens a URL over HTTP yet.
 
 ## What we are building
 
@@ -24,7 +24,7 @@ Go convention, not personal taste:
 | `internal/config` | Env-based settings (`ADDR`, `BASE_URL`). |
 | `internal/handler` | HTTP transport: routes, status codes, JSON. |
 | `internal/shortener` | Domain logic: validation, code generation, orchestration. |
-| `internal/store` | Persistence **port** (`Store` interface). Implementations come later. |
+| `internal/store` | Persistence **port** (`Store`) plus `MemoryStore` (map + `RWMutex`). |
 
 Request flow we will implement:
 
@@ -45,6 +45,7 @@ go run ./cmd/server
 You should see the loaded `addr` and `baseURL`. The HTTP server is not started yet.
 
 ```bash
+go test ./internal/store
 go build -o bin/server ./cmd/server
 ```
 
@@ -52,15 +53,12 @@ go build -o bin/server ./cmd/server
 
 - No HTTP server
 - No code generator (Base62 / hash / counter)
-- No `Store` implementation
-- No tests, Dockerfile, or database
+- No durable database (Postgres) or cache (Redis)
 
-Those are the next lessons, in that order.
+Next: the shortener service (validation + code generation), then HTTP.
 
 ## Module path
 
 ```
-github.com/samuelolufeko/url-shortener
+github.com/olufekosamuel/url-shortener
 ```
-
-If your GitHub username differs, change the module path in `go.mod` and the import in `cmd/server/main.go`.
