@@ -5,18 +5,18 @@ import (
 	"errors"
 )
 
-// ErrNotFound is returned when a short code has no mapping.
-// Handlers can map this to HTTP 404 without knowing about the database.
-var ErrNotFound = errors.New("short url not found")
+var (
+	// ErrNotFound is returned when a short code has no mapping.
+	ErrNotFound = errors.New("short url not found")
+	// ErrConflict is returned when Save is asked to use a code that already exists.
+	ErrConflict = errors.New("short code already exists")
+)
 
-// Store is the persistence port for short-code -> long-URL mappings.
+// Store persists short-code → long-URL mappings.
 //
-// Interview talking point: HTTP and business logic depend on this interface,
-// not on Postgres, Redis, or a map. That is dependency inversion.
-// We can start with memory, then swap in Postgres, without rewriting handlers.
-//
-// Save and Get take context.Context so timeouts and cancellation from the
-// HTTP request flow through to storage. That matters once we leave in-memory.
+// HTTP and domain logic depend on this interface, not on a map or a database.
+// Save and Get take context.Context so request timeouts can reach storage
+// once a remote backend is used.
 type Store interface {
 	Save(ctx context.Context, code, longURL string) error
 	Get(ctx context.Context, code string) (string, error)

@@ -34,28 +34,41 @@ func TestMemoryStoreMissingCode(t *testing.T) {
 	}
 }
 
-// Two hundred goroutines hitting Save/Get at once. Without the mutex this
-// test can panic with "concurrent map read and map write".
+func TestMemoryStoreConflict(t *testing.T) {
+	s := NewMemoryStore()
+	ctx := context.Background()
+
+	if err := s.Save(ctx, "abc123", "https://example.com/a"); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	err := s.Save(ctx, "abc123", "https://example.com/b")
+	if !errors.Is(err, ErrConflict) {
+		t.Fatalf("second Save: err = %v, want ErrConflict", err)
+	}
+}
+
+// Without the mutex, concurrent map access can panic.
 func TestMemoryStoreConcurrent(t *testing.T) {
 	s := NewMemoryStore()
 	ctx := context.Background()
 
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
-		wg.Add(2)
 		code := fmt.Sprintf("c%d", i)
 		url := fmt.Sprintf("https://example.com/%d", i)
+		wg.Add(2)
 
-		go func() {
+		go func(code, url string) {
 			defer wg.Done()
 			if err := s.Save(ctx, code, url); err != nil {
 				t.Errorf("Save: %v", err)
 			}
-		}()
-		go func() {
+		}(code, url)
+
+		go func(code string) {
 			defer wg.Done()
 			_, _ = s.Get(ctx, code)
-		}()
+		}(code)
 	}
 	wg.Wait()
 }

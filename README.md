@@ -1,63 +1,45 @@
 # url-shortener
 
-A URL shortener in Go, built in layers
+A URL shortener in Go.
 
-Structure plus an in-memory `Store`. Packages compile; nothing shortens a URL over HTTP yet.
+Create a short code for a long URL, then redirect `GET /<code>` to the original. Redirects are the hot path, so storage sits behind a `Store` interface and can later move from memory to Postgres or Redis without changing HTTP.
 
-## What we are building
-
-Two requests, two jobs:
-
-1. **Create** — `POST /v1/urls` with a long URL → generate a short code → store the mapping → return `http://host/<code>`.
-2. **Redirect** — `GET /<code>` → look up the long URL → respond with `302` (or `301`).
-
-Reads (redirects) will dominate writes (creates). That is why we keep storage behind an interface: later we can add Postgres for durability and Redis for hot lookups without rewriting HTTP.
-
-## Why this folder layout
-
-Go convention, not personal taste:
+## Layout
 
 | Path | Role |
 | --- | --- |
-| `cmd/server` | The binary. `main` wires dependencies. No business logic. |
-| `internal/` | Private application code. Other Go modules cannot import it. |
-| `internal/config` | Env-based settings (`ADDR`, `BASE_URL`). |
-| `internal/handler` | HTTP transport: routes, status codes, JSON. |
-| `internal/shortener` | Domain logic: validation, code generation, orchestration. |
-| `internal/store` | Persistence **port** (`Store`) plus `MemoryStore` (map + `RWMutex`). |
-
-Request flow we will implement:
+| `cmd/server` | Binary. `main` loads config and wires packages. |
+| `internal/` | Private application code. Other modules cannot import it. |
+| `internal/config` | `ADDR` and `BASE_URL` from the environment. |
+| `internal/handler` | HTTP: routes, status codes, JSON. Not implemented yet. |
+| `internal/shortener` | Validate URLs, generate Base62 codes, read/write `Store`. |
+| `internal/store` | `Store` interface and `MemoryStore` (map + `RWMutex`). |
 
 ```
-HTTP request → handler → shortener.Service → store.Store → memory / Postgres / Redis
+HTTP request → handler → shortener.Service → store.Store
 ```
 
-Each arrow is a dependency. `handler` never talks to a database. That is the design you can draw on a whiteboard.
-
-## Run the skeleton
+## Run
 
 Requires Go 1.21+.
 
 ```bash
+go test ./...
 go run ./cmd/server
 ```
 
-You should see the loaded `addr` and `baseURL`. The HTTP server is not started yet.
+The process logs config and exits. The HTTP server is not started yet.
 
 ```bash
-go test ./internal/store
 go build -o bin/server ./cmd/server
 ```
 
-## What is intentionally missing
+## Not implemented yet
 
-- No HTTP server
-- No code generator (Base62 / hash / counter)
-- No durable database (Postgres) or cache (Redis)
+- HTTP server
+- Durable database (Postgres) or cache (Redis)
 
-Next: the shortener service (validation + code generation), then HTTP.
-
-## Module path
+## Module
 
 ```
 github.com/olufekosamuel/url-shortener

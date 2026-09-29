@@ -5,19 +5,14 @@ import (
 	"sync"
 )
 
-// Compile-time check: if MemoryStore stops matching Store, this line fails to compile.
+// Compile-time check: if MemoryStore stops matching Store, this fails to compile.
 var _ Store = (*MemoryStore)(nil)
 
 // MemoryStore keeps mappings in a Go map.
 //
-// Interview talking points:
-//   - A map is not safe for concurrent use. HTTP servers handle many
-//     goroutines at once, so every read and write goes through a mutex.
-//   - RWMutex: redirects are reads (RLock), creates are writes (Lock).
-//     Many redirects can run together; a create waits for them to finish.
-//   - This is not durable. Restart the process and every short link is gone.
-//     That is why Postgres comes later. The rest of the app will not care,
-//     because it only sees the Store interface.
+// Maps are not safe for concurrent use, so every read and write takes a mutex.
+// Redirects use RLock so many can run together; Save uses Lock.
+// Data is lost when the process exits.
 type MemoryStore struct {
 	mu   sync.RWMutex
 	urls map[string]string // code -> long URL
@@ -32,6 +27,9 @@ func NewMemoryStore() *MemoryStore {
 func (s *MemoryStore) Save(_ context.Context, code, longURL string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if _, exists := s.urls[code]; exists {
+		return ErrConflict
+	}
 	s.urls[code] = longURL
 	return nil
 }
