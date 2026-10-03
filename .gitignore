@@ -1,12 +1,11 @@
-# Built binaries
-bin/
-*.exe
-*.test
-*.out
-
-# Go workspace / coverage
-coverage.out
-coverage.html
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
 
 # Local env (secrets, machine-specific config)
 .env
